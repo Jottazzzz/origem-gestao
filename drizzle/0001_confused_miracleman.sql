@@ -1,0 +1,1 @@
+ALTER TABLE `contracts` ADD `container_type` text DEFAULT 'Baldão' NOT NULL;

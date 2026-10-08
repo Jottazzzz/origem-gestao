@@ -1,60 +1,67 @@
 # Origem Gestão
 
-Sistema operacional para a Origem Compostagem: contratos, coletas, rotas, leiras, alertas e indicadores de impacto.
+Sistema web desenvolvido para apoiar a operação da **Origem Compostagem**, em Cuiabá/MT. Reúne contratos e clientes, programação de coletas, rotas, acompanhamento de leiras, alertas e auditoria.
 
-## Arquitetura atual
+**Demonstração publicada:** https://origem-gestao.joao-cgb.chatgpt.site
 
-- **Frontend:** React 19 + Vinext/Next App Router + TypeScript + Tailwind + componentes Shadcn.
-- **Backend:** rotas HTTP no App Router, executadas em Cloudflare Workers.
-- **Persistência de contratos:** Cloudflare D1 com Drizzle ORM e migrações versionadas.
-- **Validação:** Zod no servidor e React Hook Form + Zod no cliente.
-- **Mapas:** Google Maps JavaScript API + Places API (New), carregados somente quando a chave estiver configurada.
-- **Outros módulos:** leiras, coletas, rotas e auditoria geral permanecem em modo demonstrativo local neste estágio do MVP.
+## O que o sistema faz
 
-## Fluxo funcional de contratos
+| Módulo | Recursos | Armazenamento atual |
+| --- | --- | --- |
+| Contratos e clientes | Cadastro, endereço com busca por CEP, vigência, filtros, arquivamento e histórico de alterações | Cloudflare D1 |
+| Rotas e coletas | Agenda, tabela, recorrência, status e seleção do endereço de um cliente cadastrado, com edição manual | Armazenamento local do navegador |
+| Pátio e leiras | Medições, limites de temperatura e alertas | Armazenamento local do navegador |
+| Auditoria | Consulta das ações registradas pelo sistema | Eventos contratuais no D1; ações operacionais locais no navegador |
+| Acesso | Login e perfis Administrativo e Gestor | Cloudflare D1 |
 
-1. Cadastro do cliente e endereço estruturado.
-2. Validação de CPF/CNPJ, CEP, telefone, e-mail e campos obrigatórios.
-3. Definição do objeto, vigência, valor, pagamento, frequência e bombonas.
-4. Revisão antes do envio.
-5. Persistência no D1 via API.
-6. Busca, filtros, detalhes, edição, status, arquivamento e exportação CSV.
-7. Histórico imutável dos eventos contratuais.
+O perfil **Administrativo** tem as permissões mais amplas, incluindo a auditoria e ações restritas em contratos. O projeto é um MVP: os módulos operacionais indicados como locais ainda não compartilham dados entre computadores ou navegadores.
 
-O status de alerta é calculado automaticamente pela vigência: ativo, vencendo em até 30 dias ou vencido. Encerramento, reativação e arquivamento exigem justificativa.
+## Tecnologias
 
-## Google Maps
+- React 19, TypeScript, Vinext/Next App Router, Tailwind CSS e componentes Shadcn;
+- APIs do App Router em Cloudflare Workers;
+- Cloudflare D1 (SQLite), Drizzle ORM e Zod para os dados persistidos de contratos e acesso;
+- API ViaCEP, por meio de uma rota do próprio aplicativo, para auxiliar o cadastro de endereços.
 
-Defina `GOOGLE_MAPS_API_KEY` no ambiente de hospedagem. Habilite no Google Cloud:
+A integração com Google Maps foi descartada e não é necessária para executar o projeto. Os arquivos em `supabase/` e `drizzle-postgres/` representam estudos de uma futura migração para PostgreSQL; **o site publicado não usa Supabase**. Consulte `docs/postgres-migration.md` antes de tentar uma migração.
 
-- Maps JavaScript API;
-- Places API (New).
-
-Restrinja a chave por referenciador HTTP aos domínios usados pelo projeto e limite-a somente às APIs acima. A chave web aparece no navegador por definição; a segurança depende das restrições de domínio e API.
-
-Quando configurado, o cadastro de contrato permite buscar um endereço, preencher os componentes estruturados, salvar `placeId`, latitude e longitude, exibir marcador e reabrir a localização no Google Maps. Sem a chave, o cadastro manual continua disponível e a dependência é mostrada claramente.
-
-## Estrutura principal
+## Estrutura do repositório
 
 ```text
-app/api/contracts/       API CRUD e mudanças de status
-app/api/config/          configuração pública controlada do mapa
-components/contracts/    fluxo, lista, detalhes e estados de contratos
-components/google-location.tsx
-db/schema.ts             contratos e eventos contratuais
-hooks/use-contracts.ts   estado remoto e tratamento de erros
-lib/contracts.ts         tipos, máscaras e validações compartilhadas
-lib/contract-server.ts   transformação e acesso aos dados
-drizzle/                 migrações D1
+app/page.tsx             Interface dos módulos operacionais
+app/api/                 Login, contratos e consulta de CEP
+components/contracts/    Cadastro, listagem e detalhes contratuais
+db/                     Esquema e acesso ao Cloudflare D1
+drizzle/                Migrações do banco D1
+lib/                    Regras de negócio e autenticação
+tests/                  Verificações automatizadas do projeto
+docs/                   Anotações sobre a futura migração PostgreSQL
+supabase/               Modelo SQL experimental, não conectado ao site
 ```
 
-## Comandos
+## Executar para desenvolvimento
+
+Requer Node.js 22.13 ou superior. Na pasta do projeto:
+
+```bash
+npm ci
+npm run dev
+```
+
+A interface abre no endereço exibido pelo terminal. As rotas de login e contratos dependem do binding `DB` e das migrações D1 da plataforma Sites/Cloudflare; abrir o frontend localmente sem preparar um D1 local não reproduz os dados do site publicado. Para avaliar o fluxo completo, use a demonstração acima.
+
+Para conferir o código:
 
 ```bash
 npm run build
-npm run lint
-npx tsc --noEmit
-npm run db:generate
+node --test tests/*.test.mjs
 ```
 
-Nunca grave chaves no código ou no repositório. Use `.env.example` apenas como referência dos nomes de configuração.
+## Limites e cuidados
+
+- Os dados de coletas, rotas, leiras e parte da auditoria são demonstração local; limpar os dados do navegador pode removê-los.
+- Para iniciar um banco D1 vazio, configure `ADMIN_BOOTSTRAP_PASSWORD` como segredo do ambiente com uma senha forte de pelo menos 16 caracteres. O primeiro acesso do usuário `admin` cria seu registro; não coloque o valor desse segredo no repositório. Os demais usuários devem ser provisionados pelo responsável pela implantação.
+- Não envie credenciais, dados reais de clientes ou arquivos `.env` ao repositório.
+- O modelo SQL de Supabase é experimental e não foi conectado nem validado como implantação do site atual.
+
+Projeto extensionista desenvolvido para a Origem Compostagem.

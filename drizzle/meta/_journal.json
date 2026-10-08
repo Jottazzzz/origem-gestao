@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788299973468,
+      "tag": "0000_happy_golden_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788375568612,
+      "tag": "0001_confused_miracleman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788382200000,
+      "tag": "0002_demo_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789506509173,
+      "tag": "0003_omniscient_hardball",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789657800000,
+      "tag": "0004_admin_is_master",
+      "breakpoints": true
+    }
+  ]
+}
